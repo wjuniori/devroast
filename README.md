@@ -1,27 +1,27 @@
 # Devroast
 
-Devroast is a playful web app that turns code review into entertainment. You paste a snippet, the interface frames it like a terminal roast session, and the app highlights the vibe of the code with a bold, developer-first visual language.
+Devroast e uma aplicacao web divertida que transforma revisao de codigo em entretenimento. Voce cola um snippet, a interface apresenta tudo como uma sessao de roast em terminal, e o app destaca a vibe do codigo com uma identidade forte e pensada para devs.
 
-This project is being built during the Rocketseat NLW event, following the lessons from the event classes while evolving the product and interface along the way.
+Este projeto esta sendo construido durante a NLW da Rocketseat, acompanhando as aulas do evento enquanto o produto e a interface evoluem ao longo do processo.
 
-## What the app does
+## O que o app faz
 
-- lets people paste code into a roast-themed interface
-- presents the analysis experience with a terminal-inspired UI
-- showcases a public shame leaderboard with intentionally bad code examples
-- includes a shared component library route used to preview and validate the design system
+- permite colar codigo em uma interface com tema de roast
+- apresenta a experiencia de analise com uma UI inspirada em terminal
+- exibe uma shame leaderboard publica com exemplos intencionalmente ruins
+- inclui uma rota de biblioteca de componentes para visualizar e validar o design system
 
-## Current experience
+## Experiencia atual
 
-- homepage inspired by the Pencil design used in the project
-- reusable UI components for buttons, switches, cards, code blocks, status badges, diff lines, table rows, and score visuals
-- responsive layout that preserves the product look on desktop and mobile
+- homepage inspirada no design criado no Pencil para o projeto
+- componentes reutilizaveis de UI para buttons, switches, cards, code blocks, status badges, diff lines, table rows e score visuals
+- layout responsivo que preserva a identidade do produto no desktop e no mobile
 
-## Why this project exists
+## Por que este projeto existe
 
-Devroast mixes humor, code culture, and interface design into a product concept that feels fun to explore and strong enough to evolve into a richer developer experience.
+Devroast mistura humor, cultura dev e design de interface em um conceito de produto que e divertido de explorar e tem base para evoluir para uma experiencia mais rica para desenvolvedores.
 
-## Built with
+## Construido com
 
 - Next.js
 - React
@@ -29,7 +29,7 @@ Devroast mixes humor, code culture, and interface design into a product concept 
 - Base UI
 - Shiki
 
-## Preview routes
+## Rotas para visualizar
 
-- `/` - main Devroast landing experience
-- `/components` - component gallery for the shared UI system
+- `/` - experiencia principal do Devroast
+- `/components` - galeria de componentes compartilhados da interface
