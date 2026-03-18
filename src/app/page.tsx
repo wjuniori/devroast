@@ -65,7 +65,7 @@ const leaderboardEntries = [
 
 export default function Home() {
   const [code, setCode] = useState("");
-  const isOverLimit = code.length > 10000;
+  const isOverLimit = code.length > 2000;
 
   return (
     <main className="flex-1 bg-bg-page">

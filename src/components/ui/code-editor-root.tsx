@@ -38,7 +38,7 @@ export interface CodeEditorRootProps
   showLineNumbers?: boolean;
   /**
    * Maximum character limit for the code input.
-   * @default 10000
+   * @default 2000
    */
   maxLength?: number;
 }
@@ -59,7 +59,7 @@ export function CodeEditorRoot({
   className,
   showLanguageSelect = true,
   showLineNumbers = true,
-  maxLength = 10000,
+  maxLength = 2000,
   style,
   ...props
 }: CodeEditorRootProps) {
