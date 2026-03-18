@@ -28,6 +28,14 @@ export {
   CodeBlockTitle,
   CodeBlockWindowControls,
 } from "./code-block";
+export type { CodeEditorHighlightProps } from "./code-editor-highlight";
+export { CodeEditorHighlight } from "./code-editor-highlight";
+export type { CodeEditorInputProps } from "./code-editor-input";
+export { CodeEditorInput } from "./code-editor-input";
+export type { CodeEditorLanguageSelectProps } from "./code-editor-language-select";
+export { CodeEditorLanguageSelect } from "./code-editor-language-select";
+export type { CodeEditorRootProps } from "./code-editor-root";
+export { CodeEditorRoot } from "./code-editor-root";
 export type { DiffLineProps, DiffLineVariants } from "./diff-line";
 export { DiffLine, diffLineVariants } from "./diff-line";
 export type { ScoreRingProps, ScoreRingVariants } from "./score-ring";

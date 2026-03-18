@@ -1,0 +1,2 @@
+DROP INDEX "idx_leaderboard_public";--> statement-breakpoint
+CREATE INDEX "idx_leaderboard_public" ON "roast_submissions" USING btree ("score","created_at" DESC NULLS LAST) WHERE "roast_submissions"."visibility"::text = 'public' AND "roast_submissions"."status"::text = 'completed';

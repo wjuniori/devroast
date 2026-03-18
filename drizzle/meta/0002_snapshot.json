@@ -1,0 +1,524 @@
+{
+  "id": "2f96fa25-20eb-49bd-93a3-498f03696ce9",
+  "prevId": "2c4a2a2e-a43d-4f1f-99b5-e0ea93eae017",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.roast_analysis_items": {
+      "name": "roast_analysis_items",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "submission_id": {
+          "name": "submission_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "severity": {
+          "name": "severity",
+          "type": "analysis_severity",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "display_order": {
+          "name": "display_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "roast_analysis_items_submission_id_roast_submissions_id_fk": {
+          "name": "roast_analysis_items_submission_id_roast_submissions_id_fk",
+          "tableFrom": "roast_analysis_items",
+          "tableTo": "roast_submissions",
+          "columnsFrom": [
+            "submission_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.roast_diff_blocks": {
+      "name": "roast_diff_blocks",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "submission_id": {
+          "name": "submission_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "from_label": {
+          "name": "from_label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'your_code.ts'"
+        },
+        "to_label": {
+          "name": "to_label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'improved_code.ts'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "roast_diff_blocks_submission_id_roast_submissions_id_fk": {
+          "name": "roast_diff_blocks_submission_id_roast_submissions_id_fk",
+          "tableFrom": "roast_diff_blocks",
+          "tableTo": "roast_submissions",
+          "columnsFrom": [
+            "submission_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.roast_diff_lines": {
+      "name": "roast_diff_lines",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "diff_block_id": {
+          "name": "diff_block_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kind": {
+          "name": "kind",
+          "type": "diff_line_kind",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "display_order": {
+          "name": "display_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "content": {
+          "name": "content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "old_line_number": {
+          "name": "old_line_number",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "new_line_number": {
+          "name": "new_line_number",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "roast_diff_lines_diff_block_id_roast_diff_blocks_id_fk": {
+          "name": "roast_diff_lines_diff_block_id_roast_diff_blocks_id_fk",
+          "tableFrom": "roast_diff_lines",
+          "tableTo": "roast_diff_blocks",
+          "columnsFrom": [
+            "diff_block_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.roast_submissions": {
+      "name": "roast_submissions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "share_slug": {
+          "name": "share_slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source_code": {
+          "name": "source_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_line_count": {
+          "name": "source_line_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "language": {
+          "name": "language",
+          "type": "code_language",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "mode": {
+          "name": "mode",
+          "type": "roast_mode",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'roast'"
+        },
+        "status": {
+          "name": "status",
+          "type": "roast_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'queued'"
+        },
+        "visibility": {
+          "name": "visibility",
+          "type": "visibility",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'private'"
+        },
+        "score": {
+          "name": "score",
+          "type": "numeric(3, 1)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "verdict": {
+          "name": "verdict",
+          "type": "roast_verdict",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "headline": {
+          "name": "headline",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "summary": {
+          "name": "summary",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "model_name": {
+          "name": "model_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "error_message": {
+          "name": "error_message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_featured": {
+          "name": "is_featured",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "featured_rank": {
+          "name": "featured_rank",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "completed_at": {
+          "name": "completed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "idx_status_created_at": {
+          "name": "idx_status_created_at",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_visibility_score": {
+          "name": "idx_visibility_score",
+          "columns": [
+            {
+              "expression": "visibility",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "score",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_share_slug_unique": {
+          "name": "idx_share_slug_unique",
+          "columns": [
+            {
+              "expression": "share_slug",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_leaderboard_public": {
+          "name": "idx_leaderboard_public",
+          "columns": [
+            {
+              "expression": "score",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"visibility\" = 'public' AND \"status\" = 'completed'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "roast_submissions_shareSlug_unique": {
+          "name": "roast_submissions_shareSlug_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "share_slug"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.analysis_severity": {
+      "name": "analysis_severity",
+      "schema": "public",
+      "values": [
+        "critical",
+        "warning",
+        "good"
+      ]
+    },
+    "public.code_language": {
+      "name": "code_language",
+      "schema": "public",
+      "values": [
+        "javascript",
+        "typescript",
+        "sql",
+        "python",
+        "java",
+        "go",
+        "rust",
+        "cpp",
+        "csharp",
+        "php",
+        "ruby",
+        "other"
+      ]
+    },
+    "public.diff_line_kind": {
+      "name": "diff_line_kind",
+      "schema": "public",
+      "values": [
+        "context",
+        "added",
+        "removed"
+      ]
+    },
+    "public.roast_mode": {
+      "name": "roast_mode",
+      "schema": "public",
+      "values": [
+        "roast",
+        "honest"
+      ]
+    },
+    "public.roast_status": {
+      "name": "roast_status",
+      "schema": "public",
+      "values": [
+        "queued",
+        "processing",
+        "completed",
+        "failed"
+      ]
+    },
+    "public.roast_verdict": {
+      "name": "roast_verdict",
+      "schema": "public",
+      "values": [
+        "needs_serious_help",
+        "rough_but_fixable",
+        "actually_not_bad",
+        "clean_enough"
+      ]
+    },
+    "public.visibility": {
+      "name": "visibility",
+      "schema": "public",
+      "values": [
+        "private",
+        "unlisted",
+        "public"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

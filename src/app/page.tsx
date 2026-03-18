@@ -4,9 +4,7 @@ import {
   Button,
   buttonVariants,
   Card,
-  CodeBlockHeader,
-  CodeBlockRoot,
-  CodeBlockWindowControls,
+  CodeEditorRoot,
   SwitchDescription,
   SwitchField,
   SwitchLabel,
@@ -102,15 +100,13 @@ export default async function Home() {
             </p>
           </div>
 
-          <CodeBlockRoot
+          <CodeEditorRoot
             className="w-full max-w-[780px]"
-            code={codeSample}
-            lang="javascript"
-          >
-            <CodeBlockHeader>
-              <CodeBlockWindowControls />
-            </CodeBlockHeader>
-          </CodeBlockRoot>
+            value={codeSample}
+            placeholder="Paste or type your code here..."
+            showLanguageSelect
+            showLineNumbers
+          />
 
           <div className="flex w-full max-w-[780px] items-center justify-between gap-4 max-md:flex-col max-md:items-start">
             <div className="flex items-center gap-4 max-md:flex-col max-md:items-start">
