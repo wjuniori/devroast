@@ -46,11 +46,9 @@ export function useShikiHighlighter() {
               lang: language,
               theme: "vesper",
             });
-            // Remove the wrapping <pre> and <code> tags, keep only the inner content
-            // This allows us to control the wrapper styling ourselves
-            return html
-              .replace(/^<pre[^>]*><code[^>]*>/i, "")
-              .replace(/<\/code><\/pre>$/i, "");
+            // Return the complete HTML with pre/code wrapper
+            // The CodeEditorHighlight component will inject this into a container
+            return html;
           } catch (error) {
             console.error(
               `Failed to highlight code with language ${language}:`,

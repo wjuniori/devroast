@@ -159,15 +159,12 @@ export function CodeEditorRoot({
       )}
 
       {/* Editor Container */}
-      <div className="relative w-full rounded-lg border border-border-primary bg-bg-input">
+      <div
+        className="relative w-full overflow-hidden rounded-lg border border-border-primary bg-bg-input"
+        style={{ minHeight: "150px" }}
+      >
         {/* Highlight Layer (behind textarea) */}
-        <div
-          data-highlight-scroll
-          className="absolute inset-0 overflow-hidden rounded-lg"
-          style={{
-            maxHeight: "400px",
-          }}
-        >
+        <div data-highlight-scroll className="absolute inset-0 rounded-lg">
           <CodeEditorHighlight
             code={code}
             language={resolvedLanguage}
@@ -185,8 +182,7 @@ export function CodeEditorRoot({
           onScroll={handleScroll}
           placeholder={placeholder}
           style={{
-            height: "400px",
-            maxHeight: "400px",
+            minHeight: "150px",
           }}
         />
       </div>

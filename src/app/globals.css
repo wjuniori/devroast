@@ -59,12 +59,8 @@ select {
 
 .code-block-content pre.shiki {
   margin: 0;
-  background: transparent;
+  background-color: transparent;
   overflow-x: auto;
-}
-
-.code-block-content code {
-  display: grid;
 }
 
 .code-block-content .line {

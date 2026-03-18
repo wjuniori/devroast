@@ -20,12 +20,16 @@ export const CodeEditorInput = forwardRef<
   return (
     <textarea
       ref={ref}
-      className={`absolute inset-0 z-10 resize-none overflow-hidden bg-transparent p-4 font-mono text-base text-transparent caret-white placeholder-text-secondary outline-none ${
+      className={`absolute inset-0 z-10 resize-none overflow-auto bg-transparent p-4 font-mono text-base text-transparent caret-white placeholder-text-secondary outline-none ${
         className ?? ""
       }`.trim()}
       style={{
         lineHeight: 1.5,
         scrollBehavior: "smooth",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
         ...style,
       }}
       spellCheck="false"

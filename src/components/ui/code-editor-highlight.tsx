@@ -104,11 +104,11 @@ export function CodeEditorHighlight({
 
   return (
     <div
-      className={`pointer-events-none relative w-full overflow-hidden ${className ?? ""}`.trim()}
+      className={`pointer-events-none relative w-full overflow-auto ${className ?? ""}`.trim()}
       style={style}
       {...props}
     >
-      <div className="flex h-full">
+      <div className="flex min-h-full">
         {/* Line numbers column (optional) */}
         {showLineNumbers && (
           <div className="flex select-none flex-col bg-transparent px-3 py-4 text-right font-mono text-sm text-text-tertiary">
@@ -126,12 +126,9 @@ export function CodeEditorHighlight({
 
         {/* Highlighted code column */}
         <div className="flex-1 overflow-auto">
-          <div
+          <pre
             id={`${containerId}-content`}
-            className="font-mono text-base leading-[1.5] text-text-primary"
-            style={{
-              padding: showLineNumbers ? undefined : "1rem",
-            }}
+            className="m-0 overflow-visible font-mono text-base leading-[1.5] text-text-primary whitespace-pre-wrap"
           />
         </div>
       </div>

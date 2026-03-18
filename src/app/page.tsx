@@ -18,25 +18,6 @@ import {
   TableRowScore,
 } from "@/components/ui";
 
-const codeSample = [
-  "function calculateTotal(items) {",
-  "  var total = 0;",
-  "  for (var i = 0; i < items.length; i++) {",
-  "    total = total + items[i].price;",
-  "  }",
-  "",
-  "  if (total > 100) {",
-  '    console.log("discount applied");',
-  "    total = total * 0.9;",
-  "  }",
-  "",
-  "  // TODO: handle tax calculation",
-  "  // TODO: handle currency conversion",
-  "",
-  "  return total;",
-  "}",
-].join("\n");
-
 const leaderboardEntries = [
   {
     rank: "1",
@@ -102,7 +83,6 @@ export default async function Home() {
 
           <CodeEditorRoot
             className="w-full max-w-[780px]"
-            value={codeSample}
             placeholder="Paste or type your code here..."
             showLanguageSelect
             showLineNumbers
