@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 import { Button, Card, CodeBlockRoot } from "@/components/ui";
 import { DiffLine } from "@/components/ui/diff-line";
 
@@ -259,14 +257,6 @@ export default async function RoastResultPage({
             </div>
           </Card>
         </section>
-
-        <div className="flex justify-center">
-          <Link href="/leaderboard">
-            <Button variant="outline" size="sm" className="h-9 px-4">
-              &lt; back to leaderboard
-            </Button>
-          </Link>
-        </div>
       </div>
     </main>
   );
