@@ -1,18 +1,8 @@
-"use client";
-
 import Link from "next/link";
-import { useState } from "react";
-
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Suspense } from "react";
+import { MetricsDisplay } from "@/components/metrics/metrics-display";
+import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CodeEditorRoot } from "@/components/ui/code-editor-root";
-import {
-  SwitchDescription,
-  SwitchField,
-  SwitchLabel,
-  SwitchRoot,
-  SwitchThumb,
-} from "@/components/ui/switch";
 import {
   TableRowLanguage,
   TableRowPreview,
@@ -21,6 +11,7 @@ import {
   TableRowRoot,
   TableRowScore,
 } from "@/components/ui/table-row";
+import { CodeEditorSection } from "./components/code-editor-section";
 
 const leaderboardEntries = [
   {
@@ -63,65 +54,21 @@ const leaderboardEntries = [
   },
 ];
 
-export default function Home() {
-  const [code, setCode] = useState("");
-  const isOverLimit = code.length > 2000;
+export const dynamic = "force-dynamic";
 
+export default function Home() {
   return (
     <main className="flex-1 bg-bg-page">
       <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-8 px-10 pt-20">
-        <section className="flex flex-col items-center gap-8">
-          <div className="flex flex-col items-center gap-3 text-center">
-            <div className="flex items-center gap-3">
-              <span className="font-mono text-4xl font-bold leading-none text-accent-green">
-                $
-              </span>
-              <h1 className="font-mono text-4xl font-bold leading-none text-text-primary">
-                paste your code. get roasted.
-              </h1>
-            </div>
-          </div>
+        <Suspense fallback={null}>
+          <CodeEditorSection />
+        </Suspense>
 
-          <CodeEditorRoot
-            className="w-full max-w-[780px]"
-            placeholder="Paste or type your code here..."
-            showLanguageSelect
-            showLineNumbers
-            onChange={setCode}
-          />
+        <div className="h-[60px] w-full" />
 
-          <div className="flex w-full max-w-[780px] items-center justify-between gap-4 max-md:flex-col max-md:items-start">
-            <div className="flex items-center gap-4 max-md:flex-col max-md:items-start">
-              <SwitchRoot defaultChecked>
-                <SwitchThumb />
-                <SwitchField>
-                  <SwitchLabel>roast mode</SwitchLabel>
-                </SwitchField>
-              </SwitchRoot>
-
-              <SwitchDescription>
-                {"// maximum sarcasm enabled"}
-              </SwitchDescription>
-            </div>
-
-            <Button disabled={isOverLimit || code.length === 0}>
-              $ roast_my_code
-            </Button>
-          </div>
-
+        <section className="mx-auto flex w-full max-w-[960px] flex-col gap-6 pb-[60px]">
           <div className="flex items-center justify-center gap-6 text-center max-md:flex-wrap">
-            <span className="font-sans text-xs text-text-tertiary">
-              2,847 codes roasted
-            </span>
-            <span
-              aria-hidden="true"
-              className="font-mono text-xs text-text-tertiary"
-            >
-              ·
-            </span>
-            <span className="font-sans text-xs text-text-tertiary">
-              avg score: 4.2/10
-            </span>
+            <MetricsDisplay />
           </div>
         </section>
 
@@ -187,7 +134,7 @@ export default function Home() {
 
           <div className="flex justify-center pt-4">
             <p className="font-sans text-xs text-text-tertiary">
-              showing top 3 of 2,847 ·{" "}
+              showing top 3 ·{" "}
               <Link
                 className="transition-colors hover:text-text-primary"
                 href="/leaderboard"

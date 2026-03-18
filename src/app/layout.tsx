@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { JetBrains_Mono } from "next/font/google";
 
 import { Navbar } from "@/components/layout/navbar";
+import { TRPCProvider } from "@/components/providers/trpc-provider";
 
 import "./globals.css";
 
@@ -23,10 +24,12 @@ export default function RootLayout({
   return (
     <html lang="en" className={fontMono.variable}>
       <body className="min-h-screen bg-bg-page font-sans text-text-primary">
-        <div className="flex min-h-screen flex-col">
-          <Navbar />
-          {children}
-        </div>
+        <TRPCProvider>
+          <div className="flex min-h-screen flex-col">
+            <Navbar />
+            {children}
+          </div>
+        </TRPCProvider>
       </body>
     </html>
   );
