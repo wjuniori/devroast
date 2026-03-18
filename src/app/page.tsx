@@ -1,22 +1,26 @@
-import Link from "next/link";
+"use client";
 
+import Link from "next/link";
+import { useState } from "react";
+
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { CodeEditorRoot } from "@/components/ui/code-editor-root";
 import {
-  Button,
-  buttonVariants,
-  Card,
-  CodeEditorRoot,
   SwitchDescription,
   SwitchField,
   SwitchLabel,
   SwitchRoot,
   SwitchThumb,
+} from "@/components/ui/switch";
+import {
   TableRowLanguage,
   TableRowPreview,
   TableRowPreviewLine,
   TableRowRank,
   TableRowRoot,
   TableRowScore,
-} from "@/components/ui";
+} from "@/components/ui/table-row";
 
 const leaderboardEntries = [
   {
@@ -59,7 +63,10 @@ const leaderboardEntries = [
   },
 ];
 
-export default async function Home() {
+export default function Home() {
+  const [code, setCode] = useState("");
+  const isOverLimit = code.length > 10000;
+
   return (
     <main className="flex-1 bg-bg-page">
       <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-8 px-10 pt-20">
@@ -73,12 +80,6 @@ export default async function Home() {
                 paste your code. get roasted.
               </h1>
             </div>
-
-            <p className="font-sans text-sm leading-none text-text-secondary">
-              {
-                "// drop your code below and we'll rate it - brutally honest or full roast mode"
-              }
-            </p>
           </div>
 
           <CodeEditorRoot
@@ -86,6 +87,7 @@ export default async function Home() {
             placeholder="Paste or type your code here..."
             showLanguageSelect
             showLineNumbers
+            onChange={setCode}
           />
 
           <div className="flex w-full max-w-[780px] items-center justify-between gap-4 max-md:flex-col max-md:items-start">
@@ -102,7 +104,9 @@ export default async function Home() {
               </SwitchDescription>
             </div>
 
-            <Button>$ roast_my_code</Button>
+            <Button disabled={isOverLimit || code.length === 0}>
+              $ roast_my_code
+            </Button>
           </div>
 
           <div className="flex items-center justify-center gap-6 text-center max-md:flex-wrap">

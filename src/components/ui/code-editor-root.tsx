@@ -36,6 +36,11 @@ export interface CodeEditorRootProps
    * @default true
    */
   showLineNumbers?: boolean;
+  /**
+   * Maximum character limit for the code input.
+   * @default 10000
+   */
+  maxLength?: number;
 }
 
 /**
@@ -54,6 +59,7 @@ export function CodeEditorRoot({
   className,
   showLanguageSelect = true,
   showLineNumbers = true,
+  maxLength = 10000,
   style,
   ...props
 }: CodeEditorRootProps) {
@@ -66,6 +72,11 @@ export function CodeEditorRoot({
     useState<SupportedLanguage | null>(null);
   const [manualLanguage, setManualLanguage] =
     useState<SupportedLanguage | null>(null);
+
+  // Check if code exceeds limit
+  const isOverLimit = code.length > maxLength;
+  const characterCount = code.length;
+  const remainingChars = maxLength - characterCount;
 
   // Detection hook
   const { detectImmediate, detectDebounced } = useCodeLanguageDetection();
@@ -185,6 +196,19 @@ export function CodeEditorRoot({
             minHeight: "150px",
           }}
         />
+
+        {/* Character count indicator */}
+        <div
+          className={`absolute bottom-2 right-3 font-mono text-xs transition-colors ${
+            isOverLimit
+              ? "text-accent-red"
+              : remainingChars < 1000
+                ? "text-accent-amber"
+                : "text-text-tertiary"
+          }`}
+        >
+          {characterCount.toLocaleString()} / {maxLength.toLocaleString()}
+        </div>
       </div>
     </div>
   );
