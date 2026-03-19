@@ -1,21 +1,24 @@
-import { eq } from "drizzle-orm"
-import { notFound } from "next/navigation"
-import { Suspense } from "react"
-import db from "@/db/client"
-import { roastSubmissions, roastAnalysisItems, roastDiffBlocks, roastDiffLines } from "@/db/schema"
-import { Button, Card, CodeBlockRoot } from "@/components/ui"
-import { DiffLine } from "@/components/ui/diff-line"
-import { createRoast } from "@/app/actions"
-
-export const dynamic = "force-dynamic"
+import { eq } from "drizzle-orm";
+import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import { createRoast } from "@/app/actions";
+import { Button, Card, CodeBlockRoot } from "@/components/ui";
+import { DiffLine } from "@/components/ui/diff-line";
+import db from "@/db/client";
+import {
+  roastAnalysisItems,
+  roastDiffBlocks,
+  roastDiffLines,
+  roastSubmissions,
+} from "@/db/schema";
 
 export const metadata = {
   title: "Roast Result | Devroast",
   description: "Your code has been thoroughly roasted",
-}
+};
 
 function ScoreRing({ score }: { score: number }) {
-  const circumference = 2 * Math.PI * 88
+  const circumference = 2 * Math.PI * 88;
 
   return (
     <div
@@ -63,12 +66,16 @@ function ScoreRing({ score }: { score: number }) {
         <span className="font-mono text-base text-text-tertiary">/10</span>
       </div>
     </div>
-  )
+  );
 }
 
-function IssueCard({ issue }: { issue: { title: string; description: string; severity: string } }) {
-  const isCritical = issue.severity === "critical"
-  const isWarning = issue.severity === "warning"
+function IssueCard({
+  issue,
+}: {
+  issue: { title: string; description: string; severity: string };
+}) {
+  const isCritical = issue.severity === "critical";
+  const isWarning = issue.severity === "warning";
 
   return (
     <Card className="p-5" padding="none">
@@ -78,8 +85,8 @@ function IssueCard({ issue }: { issue: { title: string; description: string; sev
             isCritical
               ? "size-2 rounded-full bg-accent-red"
               : isWarning
-              ? "size-2 rounded-full bg-accent-amber"
-              : "size-2 rounded-full bg-accent-green"
+                ? "size-2 rounded-full bg-accent-amber"
+                : "size-2 rounded-full bg-accent-green"
           }
         />
         <span
@@ -87,8 +94,8 @@ function IssueCard({ issue }: { issue: { title: string; description: string; sev
             isCritical
               ? "font-mono text-xs text-accent-red"
               : isWarning
-              ? "font-mono text-xs text-accent-amber"
-              : "font-mono text-xs text-accent-green"
+                ? "font-mono text-xs text-accent-amber"
+                : "font-mono text-xs text-accent-green"
           }
         >
           {issue.severity}
@@ -101,7 +108,7 @@ function IssueCard({ issue }: { issue: { title: string; description: string; sev
         {issue.description}
       </p>
     </Card>
-  )
+  );
 }
 
 function DiffBlockContent({ blockId }: { blockId: string }) {
@@ -111,16 +118,17 @@ function DiffBlockContent({ blockId }: { blockId: string }) {
         {"// Diff lines will be displayed here"}
       </span>
     </div>
-  )
+  );
 }
 
-async function RoastContent({ id }: { id: string }) {
+async function RoastContent({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const submission = await db.query.roastSubmissions.findFirst({
     where: eq(roastSubmissions.id, id),
-  })
+  });
 
   if (!submission) {
-    notFound()
+    notFound();
   }
 
   if (submission.status === "failed") {
@@ -141,30 +149,34 @@ async function RoastContent({ id }: { id: string }) {
           </Button>
         </form>
       </div>
-    )
+    );
   }
 
   if (submission.status === "queued" || submission.status === "processing") {
     return (
       <div className="flex flex-col items-center justify-center gap-6 py-20">
         <div className="flex flex-col items-center gap-2 text-center">
-          <span className="font-mono text-2xl text-accent-amber">$ processing</span>
-          <p className="font-mono text-text-secondary">Analyzing your code...</p>
+          <span className="font-mono text-2xl text-accent-amber">
+            $ processing
+          </span>
+          <p className="font-mono text-text-secondary">
+            Analyzing your code...
+          </p>
         </div>
       </div>
-    )
+    );
   }
 
   const issues = await db.query.roastAnalysisItems.findMany({
     where: eq(roastAnalysisItems.submissionId, id),
     orderBy: (items, { asc }) => [asc(items.displayOrder)],
-  })
+  });
 
   const diffBlocks = await db.query.roastDiffBlocks.findMany({
     where: eq(roastDiffBlocks.submissionId, id),
-  })
+  });
 
-  const score = Number(submission.score) || 0
+  const score = Number(submission.score) || 0;
 
   return (
     <>
@@ -190,7 +202,9 @@ async function RoastContent({ id }: { id: string }) {
           </div>
 
           {submission.summary && (
-            <p className="font-mono text-sm text-text-secondary">{submission.summary}</p>
+            <p className="font-mono text-sm text-text-secondary">
+              {submission.summary}
+            </p>
           )}
         </div>
       </section>
@@ -253,7 +267,11 @@ async function RoastContent({ id }: { id: string }) {
             </div>
 
             {diffBlocks.map((block) => (
-              <Card key={block.id} className="overflow-hidden p-0" padding="none">
+              <Card
+                key={block.id}
+                className="overflow-hidden p-0"
+                padding="none"
+              >
                 <div className="flex h-10 items-center border-b border-border-primary px-4 font-mono text-xs text-text-secondary">
                   {block.fromLabel} → {block.toLabel}
                 </div>
@@ -264,27 +282,27 @@ async function RoastContent({ id }: { id: string }) {
         </>
       )}
     </>
-  )
+  );
 }
 
 export default async function RoastResultPage({
   params,
 }: {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string }>;
 }) {
-  const { id } = await params
-
   return (
     <main className="flex-1 bg-bg-page">
       <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-10 px-20 py-10">
-        <Suspense fallback={
-          <div className="flex items-center justify-center py-20">
-            <span className="font-mono text-text-tertiary">Loading...</span>
-          </div>
-        }>
-          <RoastContent id={id} />
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center py-20">
+              <span className="font-mono text-text-tertiary">Loading...</span>
+            </div>
+          }
+        >
+          <RoastContent params={params} />
         </Suspense>
       </div>
     </main>
-  )
+  );
 }
