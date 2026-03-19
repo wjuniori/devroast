@@ -18,6 +18,10 @@ export interface CodeEditorRootProps
    */
   onChange?: (code: string) => void;
   /**
+   * Callback when language changes.
+   */
+  onLanguageChange?: (language: string) => void;
+  /**
    * Placeholder text when code is empty.
    * @default "Paste or type your code here..."
    */
@@ -55,6 +59,7 @@ export interface CodeEditorRootProps
 export function CodeEditorRoot({
   value = "",
   onChange,
+  onLanguageChange,
   placeholder = "Paste or type your code here...",
   className,
   showLanguageSelect = true,
@@ -97,6 +102,9 @@ export function CodeEditorRoot({
       detectDebounced(newCode, (result) => {
         if (result.isSupported) {
           setDetectedLanguage(result.language);
+          if (result.language) {
+            onLanguageChange?.(result.language);
+          }
         }
       });
     }
@@ -130,10 +138,14 @@ export function CodeEditorRoot({
       const result = detectImmediate(code);
       if (result.isSupported) {
         setDetectedLanguage(result.language);
+        if (result.language) {
+          onLanguageChange?.(result.language);
+        }
       }
     } else {
       setLanguageMode("manual");
       setManualLanguage(value);
+      onLanguageChange?.(value);
     }
   };
 
