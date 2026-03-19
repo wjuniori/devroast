@@ -1,20 +1,33 @@
-"use client";
+"use client"
 
-import { useState } from "react";
+import { useState } from "react"
 
-import { Button } from "@/components/ui/button";
-import { CodeEditorRoot } from "@/components/ui/code-editor-root";
+import { Button } from "@/components/ui/button"
+import { CodeEditorRoot } from "@/components/ui/code-editor-root"
 import {
   SwitchDescription,
   SwitchField,
   SwitchLabel,
   SwitchRoot,
   SwitchThumb,
-} from "@/components/ui/switch";
+} from "@/components/ui/switch"
+import { createRoast } from "@/app/actions"
 
 export function CodeEditorSection() {
-  const [code, setCode] = useState("");
-  const isOverLimit = code.length > 2000;
+  const [code, setCode] = useState("")
+  const [language, setLanguage] = useState("javascript")
+  const [mode, setMode] = useState<"roast" | "honest">("roast")
+  const [pending, setPending] = useState(false)
+  const isOverLimit = code.length > 2000
+
+  const handleSubmit = async (formData: FormData) => {
+    setPending(true)
+    try {
+      await createRoast(formData)
+    } catch {
+      setPending(false)
+    }
+  }
 
   return (
     <section className="flex flex-col items-center gap-8">
@@ -29,30 +42,41 @@ export function CodeEditorSection() {
         </div>
       </div>
 
-      <CodeEditorRoot
-        className="w-full max-w-[780px]"
-        placeholder="Paste or type your code here..."
-        showLanguageSelect
-        showLineNumbers
-        onChange={setCode}
-      />
+      <form action={handleSubmit} className="flex w-full flex-col items-center gap-8">
+        <input type="hidden" name="code" value={code} />
+        <input type="hidden" name="language" value={language} />
+        <input type="hidden" name="mode" value={mode} />
 
-      <div className="flex w-full max-w-[780px] items-center justify-between gap-4 max-md:flex-col max-md:items-start">
-        <div className="flex items-center gap-4 max-md:flex-col max-md:items-start">
-          <SwitchRoot defaultChecked>
-            <SwitchThumb />
-            <SwitchField>
-              <SwitchLabel>roast mode</SwitchLabel>
-            </SwitchField>
-          </SwitchRoot>
+        <CodeEditorRoot
+          className="w-full max-w-[780px]"
+          placeholder="Paste or type your code here..."
+          showLanguageSelect
+          showLineNumbers
+          onChange={setCode}
+          onLanguageChange={setLanguage}
+          value={code}
+        />
 
-          <SwitchDescription>{"// maximum sarcasm enabled"}</SwitchDescription>
+        <div className="flex w-full max-w-[780px] items-center justify-between gap-4 max-md:flex-col max-md:items-start">
+          <div className="flex items-center gap-4 max-md:flex-col max-md:items-start">
+            <SwitchRoot
+              defaultChecked
+              onCheckedChange={(checked) => setMode(checked ? "roast" : "honest")}
+            >
+              <SwitchThumb />
+              <SwitchField>
+                <SwitchLabel>roast mode</SwitchLabel>
+              </SwitchField>
+            </SwitchRoot>
+
+            <SwitchDescription>{"// maximum sarcasm enabled"}</SwitchDescription>
+          </div>
+
+          <Button disabled={isOverLimit || code.length === 0 || pending} type="submit">
+            {pending ? "$ processing..." : "$ roast_my_code"}
+          </Button>
         </div>
-
-        <Button disabled={isOverLimit || code.length === 0}>
-          $ roast_my_code
-        </Button>
-      </div>
+      </form>
     </section>
-  );
+  )
 }
