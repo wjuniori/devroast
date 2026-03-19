@@ -31,16 +31,37 @@ export const { trpc, HydrateClient } = createHydrationHelpers<typeof appRouter>(
 
 ## Prefetching in Server Components
 
-Use `trpc.<router>.<procedure>.prefetch()` for server-side prefetching:
+Use `trpc.<router>.<procedure>.prefetch()` for server-side prefetching.
+
+### Parallel Queries with Promise.all
+
+When fetching multiple queries, use `Promise.all` to execute them in parallel for better performance:
 
 ```typescript
 // In a Server Component (page.tsx)
 import { trpc } from "@/trpc/server";
 
 export default async function Page() {
-  await trpc.metrics.getMetrics.prefetch();
-  return <HydrateClient><ClientComponent /></HydrateClient>;
+  // Execute queries in parallel
+  await Promise.all([
+    trpc.metrics.worstRoasts.prefetch(),
+    trpc.leaderboard.topRoasts.prefetch(),
+  ]);
+
+  return (
+    <HydrateClient>
+      <Leaderboard />
+    </HydrateClient>
+  );
 }
+```
+
+### Sequential Prefetch (Single Query)
+
+For a single query, use `await` directly:
+
+```typescript
+await trpc.metrics.getMetrics.prefetch();
 ```
 
 ## Client Components
@@ -56,6 +77,34 @@ import { trpc } from "@/trpc/client";
 export function MetricsDisplay() {
   const { data } = trpc.metrics.getMetrics.useQuery(undefined, {
     staleTime: 60 * 1000,
+  });
+
+  return <div>{data?.totalRoasts ?? 0}</div>;
+}
+```
+
+### Passing Initial Data to Client Components
+
+When using `initialData`, pass the prefetched data from the server component:
+
+```typescript
+// Server Component
+import { trpc } from "@/trpc/server";
+
+export default async function Page() {
+  const data = await trpc.metrics.getMetrics();
+  return <ClientComponent initialData={data} />;
+}
+
+// Client Component
+interface Props {
+  initialData?: { totalRoasts: number; avgScore: number };
+}
+
+export function ClientComponent({ initialData }: Props) {
+  const { data } = trpc.metrics.getMetrics.useQuery(undefined, {
+    staleTime: 60 * 1000,
+    initialData,
   });
 
   return <div>{data?.totalRoasts ?? 0}</div>;
@@ -137,3 +186,4 @@ export type AppRouter = typeof appRouter;
 - Create context in `context.ts` with headers for SSR support
 - Import types via `AppRouter` for client components
 - Keep query keys consistent with router/procedure names
+- Use `Promise.all` to prefetch multiple queries in parallel
