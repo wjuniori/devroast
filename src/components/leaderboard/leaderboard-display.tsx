@@ -1,15 +1,8 @@
 "use client";
 
-import {
-  TableRowLanguage,
-  TableRowPreview,
-  TableRowPreviewLine,
-  TableRowRank,
-  TableRowRoot,
-  TableRowScore,
-} from "@/components/ui/table-row";
 import type { RoastSubmission } from "@/db/schema/roast-submissions";
 import { trpc } from "@/trpc/client";
+import { RoastCard } from "./roast-card";
 
 interface LeaderboardProps {
   initialData?: RoastSubmission[];
@@ -34,25 +27,7 @@ export function LeaderboardDisplay({ initialData }: LeaderboardProps) {
   return (
     <div className="grid gap-4 md:grid-cols-2">
       {data.map((roast, idx) => (
-        <TableRowRoot
-          key={roast.id}
-          bordered={idx !== data.length - 1}
-          scoreTone="critical"
-        >
-          <TableRowRank>{idx + 1}</TableRowRank>
-          <TableRowScore>{Number(roast.score).toFixed(1)}</TableRowScore>
-          <TableRowPreview>
-            {roast.sourceCode
-              .split("\n")
-              .slice(0, 3)
-              .map((line) => (
-                <TableRowPreviewLine key={`${roast.id}-${line.slice(0, 20)}`}>
-                  {line}
-                </TableRowPreviewLine>
-              ))}
-          </TableRowPreview>
-          <TableRowLanguage>{roast.language}</TableRowLanguage>
-        </TableRowRoot>
+        <RoastCard key={roast.id} roast={roast} rank={idx + 1} />
       ))}
     </div>
   );
