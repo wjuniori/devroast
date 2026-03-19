@@ -25,7 +25,7 @@ export function LeaderboardDisplay({ initialData }: LeaderboardProps) {
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
+    <div className="flex flex-col gap-4">
       {data.map((roast, idx) => (
         <RoastCard key={roast.id} roast={roast} rank={idx + 1} />
       ))}
