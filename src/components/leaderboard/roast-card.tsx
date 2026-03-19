@@ -9,9 +9,16 @@ interface RoastCardProps {
   rank: number;
 }
 
+const PREVIEW_LINES = 3;
+
 export function RoastCard({ roast, rank }: RoastCardProps) {
   const [open, setOpen] = useState(false);
   const lineCount = roast.sourceCode.split("\n").length;
+  const previewCode = roast.sourceCode
+    .split("\n")
+    .slice(0, PREVIEW_LINES)
+    .join("\n");
+  const isLongCode = lineCount > PREVIEW_LINES;
 
   return (
     <div className="overflow-hidden border border-border-primary bg-bg-surface">
@@ -41,18 +48,27 @@ export function RoastCard({ roast, rank }: RoastCardProps) {
         </div>
       </button>
 
-      <div
-        className={`overflow-hidden transition-all duration-300 ${
-          open ? "max-h-[500px] overflow-y-auto" : "max-h-0"
-        }`}
-      >
+      {isLongCode ? (
+        <div
+          className={`overflow-hidden transition-all duration-300 ${
+            open ? "max-h-[500px] overflow-y-auto" : "max-h-[120px]"
+          }`}
+        >
+          <CodeBlockClient
+            className="border-t border-border-primary"
+            code={open ? roast.sourceCode : previewCode}
+            lang={roast.language}
+            showLineNumbers
+          />
+        </div>
+      ) : (
         <CodeBlockClient
           className="border-t border-border-primary"
           code={roast.sourceCode}
           lang={roast.language}
           showLineNumbers
         />
-      </div>
+      )}
     </div>
   );
 }

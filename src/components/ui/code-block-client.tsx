@@ -1,12 +1,12 @@
 "use client";
 
 import type { HTMLAttributes } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { twMerge } from "tailwind-merge";
 
 export interface CodeBlockClientProps extends HTMLAttributes<HTMLDivElement> {
   code: string;
   lang: string;
-  highlightedHtml?: string;
   showLineNumbers?: boolean;
 }
 
@@ -21,15 +21,220 @@ function getLineNumbers(code: string) {
   return code.split("\n").map((_, index) => index + 1);
 }
 
+function escapeHtml(text: string): string {
+  const map: Record<string, string> = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;",
+  };
+  return text.replace(/[&<>"']/g, (m) => map[m]);
+}
+
+const KEYWORDS: Record<string, string[]> = {
+  javascript: [
+    "const",
+    "let",
+    "var",
+    "function",
+    "return",
+    "if",
+    "else",
+    "for",
+    "while",
+    "class",
+    "import",
+    "export",
+    "from",
+    "async",
+    "await",
+    "try",
+    "catch",
+    "throw",
+    "new",
+    "this",
+    "true",
+    "false",
+    "null",
+    "undefined",
+    "typeof",
+    "instanceof",
+  ],
+  typescript: [
+    "const",
+    "let",
+    "var",
+    "function",
+    "return",
+    "if",
+    "else",
+    "for",
+    "while",
+    "class",
+    "import",
+    "export",
+    "from",
+    "async",
+    "await",
+    "try",
+    "catch",
+    "throw",
+    "new",
+    "this",
+    "true",
+    "false",
+    "null",
+    "undefined",
+    "typeof",
+    "instanceof",
+    "interface",
+    "type",
+    "enum",
+    "implements",
+    "extends",
+    "public",
+    "private",
+    "protected",
+    "readonly",
+  ],
+  python: [
+    "def",
+    "class",
+    "import",
+    "from",
+    "if",
+    "elif",
+    "else",
+    "for",
+    "while",
+    "return",
+    "try",
+    "except",
+    "finally",
+    "raise",
+    "with",
+    "as",
+    "True",
+    "False",
+    "None",
+    "and",
+    "or",
+    "not",
+    "in",
+    "is",
+    "lambda",
+    "yield",
+    "global",
+    "nonlocal",
+  ],
+  java: [
+    "public",
+    "private",
+    "protected",
+    "class",
+    "interface",
+    "extends",
+    "implements",
+    "static",
+    "final",
+    "void",
+    "int",
+    "String",
+    "boolean",
+    "if",
+    "else",
+    "for",
+    "while",
+    "return",
+    "try",
+    "catch",
+    "throw",
+    "new",
+    "this",
+    "true",
+    "false",
+    "null",
+  ],
+  sql: [
+    "SELECT",
+    "FROM",
+    "WHERE",
+    "JOIN",
+    "LEFT",
+    "RIGHT",
+    "INNER",
+    "OUTER",
+    "ON",
+    "AND",
+    "OR",
+    "NOT",
+    "IN",
+    "IS",
+    "NULL",
+    "INSERT",
+    "UPDATE",
+    "DELETE",
+    "CREATE",
+    "TABLE",
+    "DROP",
+    "ALTER",
+    "INDEX",
+    "VALUES",
+    "SET",
+  ],
+};
+
+const STRING_REGEX = /(["'`])(?:(?!\1)[^\\]|\\.)*\1/g;
+const COMMENT_REGEX = /\/\/.*$|\/\*[\s\S]*?\*\/|#.*$/gm;
+const NUMBER_REGEX = /\b\d+\.?\d*\b/g;
+const KEYWORD_REGEX = /\b[a-zA-Z_][a-zA-Z0-9_]*\b/g;
+
+function highlightCode(code: string, lang: string): string {
+  const normalizedLang = lang.toLowerCase();
+  const keywords = KEYWORDS[normalizedLang] || KEYWORDS.javascript;
+
+  let result = escapeHtml(code);
+
+  result = result.replace(
+    COMMENT_REGEX,
+    (match) => `<span class="text-text-tertiary">${match}</span>`,
+  );
+  result = result.replace(
+    STRING_REGEX,
+    (match) => `<span class="text-accent-green">${match}</span>`,
+  );
+  result = result.replace(
+    NUMBER_REGEX,
+    (match) => `<span class="text-accent-amber">${match}</span>`,
+  );
+
+  result = result.replace(KEYWORD_REGEX, (match) => {
+    if (keywords.some((kw) => kw.toLowerCase() === match.toLowerCase())) {
+      return `<span class="text-accent-blue">${match}</span>`;
+    }
+    return match;
+  });
+
+  return result;
+}
+
 export function CodeBlockClient({
   children,
   className,
   code,
-  highlightedHtml,
+  lang,
   showLineNumbers = true,
   ...props
 }: CodeBlockClientProps) {
+  const codeRef = useRef<HTMLElement>(null);
+  const [highlighted, setHighlighted] = useState(false);
   const lineNumbers = getLineNumbers(code);
+  const highlightedCode = highlightCode(code, lang);
+
+  useEffect(() => {
+    setHighlighted(true);
+  }, []);
 
   return (
     <div
@@ -53,15 +258,18 @@ export function CodeBlockClient({
           </div>
         ) : null}
 
-        <div className="code-block-content overflow-x-auto px-3 py-3 font-mono text-[13px]">
-          {highlightedHtml ? (
-            // biome-ignore lint/security/noDangerouslySetInnerHtml: Shiki returns trusted server-generated HTML
-            <div dangerouslySetInnerHTML={{ __html: highlightedHtml }} />
-          ) : (
-            <pre className="whitespace-pre-wrap">
+        <div className="code-block-content overflow-x-auto px-3 py-3">
+          <pre className="font-mono text-[13px]">
+            {highlighted ? (
+              <code
+                ref={codeRef}
+                // biome-ignore lint: custom highlighting with escaped input
+                dangerouslySetInnerHTML={{ __html: highlightedCode }}
+              />
+            ) : (
               <code>{code}</code>
-            </pre>
-          )}
+            )}
+          </pre>
         </div>
       </div>
     </div>
