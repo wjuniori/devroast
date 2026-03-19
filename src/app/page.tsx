@@ -1,16 +1,30 @@
+import { and, eq } from "drizzle-orm";
+import { cacheLife } from "next/cache";
 import Link from "next/link";
 import { Suspense } from "react";
 import { LeaderboardDisplay } from "@/components/leaderboard/leaderboard-display";
 import { LeaderboardSkeleton } from "@/components/leaderboard/leaderboard-skeleton";
 import { MetricsDisplay } from "@/components/metrics/metrics-display";
 import { buttonVariants } from "@/components/ui/button";
-import { trpc } from "@/trpc/server";
+import db from "@/db/client";
+import { roastSubmissions } from "@/db/schema";
 import { CodeEditorSection } from "./components/code-editor-section";
 
-export const dynamic = "force-dynamic";
+async function getWorstRoasts() {
+  "use cache";
+  cacheLife({ revalidate: 3600 });
+  return db.query.roastSubmissions.findMany({
+    where: and(
+      eq(roastSubmissions.status, "completed"),
+      eq(roastSubmissions.visibility, "public"),
+    ),
+    orderBy: [roastSubmissions.score],
+    limit: 3,
+  });
+}
 
 export default async function Home() {
-  await Promise.all([trpc.metrics.worstRoasts.prefetch()]);
+  const roasts = await getWorstRoasts();
 
   return (
     <main className="flex-1 bg-bg-page">
@@ -59,7 +73,7 @@ export default async function Home() {
           </div>
 
           <Suspense fallback={<LeaderboardSkeleton />}>
-            <LeaderboardDisplay />
+            <LeaderboardDisplay initialData={roasts} />
           </Suspense>
 
           <div className="flex justify-center pt-4">
