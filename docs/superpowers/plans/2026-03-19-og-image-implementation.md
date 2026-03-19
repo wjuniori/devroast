@@ -116,7 +116,7 @@ export default function RoastOGImage({
         </div>
 
         {/* Language Info */}
-        <span style={{ color: COLORS.textTertiary, fontSize: 16, fontFamily: 'JetBrains Mono' }}>
+        <span style={{ color: COLORS.textTertiary, fontSize: 16, fontFamily: 'JetBrains Mono, monospace' }}>
           lang: {language} · {lineCount} lines
         </span>
 
@@ -183,9 +183,14 @@ export const dynamic = 'force-dynamic';
 export default async function OGImage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const roast = await db.query.roastSubmissions.findFirst({
-    where: eq(roastSubmissions.id, id),
-  });
+  let roast;
+  try {
+    roast = await db.query.roastSubmissions.findFirst({
+      where: eq(roastSubmissions.id, id),
+    });
+  } catch {
+    return new Response('Database error', { status: 500 });
+  }
 
   if (!roast || roast.status !== 'completed') {
     return new Response('Not found', { status: 404 });
