@@ -8,3 +8,5 @@
 - Styling: use `tailwind-variants` for component variants; keep APIs small and composable.
 - Keep shared components generic; page copy and route-specific behavior stay in app routes.
 - Validate changes with `npm run lint` and `npm run build` when relevant.
+- Data fetching: use tRPC for type-safe API calls. See `src/trpc/AGENTS.md`.
+- Number animation: use `@number-flow/react`. See `src/components/AGENTS.md`.
