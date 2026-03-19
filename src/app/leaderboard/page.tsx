@@ -1,88 +1,32 @@
-import { Card, CodeBlockRoot } from "@/components/ui";
-
-interface LeaderboardEntry {
-  rank: string;
-  score: string;
-  language: "javascript" | "typescript" | "sql" | "java";
-  code: string;
-}
-
-const leaderboardEntries: LeaderboardEntry[] = [
-  {
-    rank: "1",
-    score: "1.2",
-    language: "javascript",
-    code: 'function hello() {\n  console.log("world");\n}',
-  },
-  {
-    rank: "2",
-    score: "1.8",
-    language: "typescript",
-    code: "if (x == true) {\n  return true;\n}",
-  },
-  {
-    rank: "3",
-    score: "2.1",
-    language: "sql",
-    code: "SELECT * FROM users\nWHERE id = 1;",
-  },
-  {
-    rank: "4",
-    score: "2.4",
-    language: "java",
-    code: "public class Main {\n  public static void main(String[] args) {}\n}",
-  },
-  {
-    rank: "5",
-    score: "2.7",
-    language: "javascript",
-    code: "while(true) {\n  doSomething();\n}",
-  },
-];
+import { and, eq } from "drizzle-orm";
+import { cacheLife } from "next/cache";
+import { Suspense } from "react";
+import { LeaderboardFull } from "@/components/leaderboard/leaderboard-full";
+import { LeaderboardSkeleton } from "@/components/leaderboard/leaderboard-skeleton";
+import db from "@/db/client";
+import { roastSubmissions } from "@/db/schema";
 
 export const metadata = {
   title: "Shame Leaderboard | Devroast",
   description: "The most roasted code on the internet, ranked by shame",
 };
 
-function LeaderboardEntry({
-  entry,
-}: {
-  entry: (typeof leaderboardEntries)[number];
-}) {
-  return (
-    <Card className="overflow-hidden" padding="none">
-      <div className="flex h-12 items-center justify-between border-b border-border-primary px-5">
-        <div className="flex items-center gap-4">
-          <span className="font-mono text-sm font-bold text-accent-amber">
-            #{entry.rank}
-          </span>
-          <span className="font-mono text-sm font-bold text-accent-red">
-            {entry.score}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <span className="font-mono text-xs text-text-secondary">
-            {entry.language}
-          </span>
-          <span className="font-mono text-xs text-text-tertiary">
-            {entry.code.split("\n").length} lines
-          </span>
-        </div>
-      </div>
-
-      <CodeBlockRoot
-        className="border-t border-border-primary"
-        code={entry.code}
-        lang={entry.language}
-        showLineNumbers
-      />
-    </Card>
-  );
+async function getLeaderboardData() {
+  "use cache";
+  cacheLife({ revalidate: 3600 });
+  return db.query.roastSubmissions.findMany({
+    where: and(
+      eq(roastSubmissions.status, "completed"),
+      eq(roastSubmissions.visibility, "public"),
+    ),
+    orderBy: [roastSubmissions.score, roastSubmissions.createdAt],
+    limit: 20,
+  });
 }
 
 export default async function LeaderboardPage() {
+  const roasts = await getLeaderboardData();
+
   return (
     <main className="flex-1 bg-bg-page">
       <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-10 px-20 py-10">
@@ -101,19 +45,11 @@ export default async function LeaderboardPage() {
               {"// the most roasted code on the internet"}
             </p>
           </div>
-
-          <div className="flex items-center gap-2 font-mono text-xs text-text-tertiary">
-            <span>2,847 submissions</span>
-            <span>·</span>
-            <span>avg score: 4.2/10</span>
-          </div>
         </section>
 
-        <section className="flex flex-col gap-5">
-          {leaderboardEntries.map((entry) => (
-            <LeaderboardEntry key={entry.rank} entry={entry} />
-          ))}
-        </section>
+        <Suspense fallback={<LeaderboardSkeleton />}>
+          <LeaderboardFull initialData={roasts} />
+        </Suspense>
       </div>
     </main>
   );

@@ -23,4 +23,15 @@ export const metricsRouter = router({
       avgScore: Number(result[0]?.avgScore ?? 0),
     };
   }),
+
+  worstRoasts: publicProcedure.query(async () => {
+    return db.query.roastSubmissions.findMany({
+      where: and(
+        eq(roastSubmissions.status, "completed"),
+        eq(roastSubmissions.visibility, "public"),
+      ),
+      orderBy: [roastSubmissions.score],
+      limit: 3,
+    });
+  }),
 });

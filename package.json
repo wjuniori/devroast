@@ -30,6 +30,7 @@
     "highlight.js": "^11.11.1",
     "next": "16.1.7",
     "number-flow": "^0.6.0",
+    "openai": "^6.32.0",
     "postgres": "^3.4.8",
     "react": "19.2.3",
     "react-dom": "19.2.3",

@@ -1,62 +1,31 @@
+import { and, eq } from "drizzle-orm";
+import { cacheLife } from "next/cache";
 import Link from "next/link";
 import { Suspense } from "react";
+import { LeaderboardDisplay } from "@/components/leaderboard/leaderboard-display";
+import { LeaderboardSkeleton } from "@/components/leaderboard/leaderboard-skeleton";
 import { MetricsDisplay } from "@/components/metrics/metrics-display";
 import { buttonVariants } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import {
-  TableRowLanguage,
-  TableRowPreview,
-  TableRowPreviewLine,
-  TableRowRank,
-  TableRowRoot,
-  TableRowScore,
-} from "@/components/ui/table-row";
+import db from "@/db/client";
+import { roastSubmissions } from "@/db/schema";
 import { CodeEditorSection } from "./components/code-editor-section";
 
-const leaderboardEntries = [
-  {
-    rank: "1",
-    rankTone: "accent" as const,
-    score: "1.2",
-    scoreTone: "critical" as const,
-    language: "javascript",
-    previewLines: [
-      { content: 'eval(prompt("enter code"))', key: "r1-1" },
-      { content: "document.write(response)", key: "r1-2" },
-      { content: "// trust the user lol", key: "r1-3", muted: true },
-    ],
-  },
-  {
-    rank: "2",
-    rankTone: "default" as const,
-    score: "1.8",
-    scoreTone: "critical" as const,
-    language: "typescript",
-    previewLines: [
-      { content: "if (x == true) { return true; }", key: "r2-1" },
-      {
-        content: "else if (x == false) { return false; }",
-        key: "r2-2",
-      },
-      { content: "else { return !false; }", key: "r2-3" },
-    ],
-  },
-  {
-    rank: "3",
-    rankTone: "default" as const,
-    score: "2.1",
-    scoreTone: "critical" as const,
-    language: "sql",
-    previewLines: [
-      { content: "SELECT * FROM users WHERE 1=1", key: "r3-1" },
-      { content: "-- TODO: add authentication", key: "r3-2", muted: true },
-    ],
-  },
-];
+async function getWorstRoasts() {
+  "use cache";
+  cacheLife({ revalidate: 3600 });
+  return db.query.roastSubmissions.findMany({
+    where: and(
+      eq(roastSubmissions.status, "completed"),
+      eq(roastSubmissions.visibility, "public"),
+    ),
+    orderBy: [roastSubmissions.score],
+    limit: 3,
+  });
+}
 
-export const dynamic = "force-dynamic";
+export default async function Home() {
+  const roasts = await getWorstRoasts();
 
-export default function Home() {
   return (
     <main className="flex-1 bg-bg-page">
       <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-8 px-10 pt-20">
@@ -103,38 +72,13 @@ export default function Home() {
             </Link>
           </div>
 
-          <Card className="overflow-hidden" padding="none">
-            <div className="flex h-10 items-center border-b border-border-primary bg-bg-surface px-5 font-mono text-xs font-medium text-text-tertiary">
-              <div className="w-[50px] shrink-0">#</div>
-              <div className="w-[70px] shrink-0">score</div>
-              <div className="flex-1">code</div>
-              <div className="w-[100px] shrink-0">lang</div>
-            </div>
-
-            {leaderboardEntries.map((entry, index) => (
-              <TableRowRoot
-                key={entry.rank}
-                bordered={index !== leaderboardEntries.length - 1}
-                rankTone={entry.rankTone}
-                scoreTone={entry.scoreTone}
-              >
-                <TableRowRank>{entry.rank}</TableRowRank>
-                <TableRowScore>{entry.score}</TableRowScore>
-                <TableRowPreview>
-                  {entry.previewLines.map((line) => (
-                    <TableRowPreviewLine key={line.key} muted={line.muted}>
-                      {line.content}
-                    </TableRowPreviewLine>
-                  ))}
-                </TableRowPreview>
-                <TableRowLanguage>{entry.language}</TableRowLanguage>
-              </TableRowRoot>
-            ))}
-          </Card>
+          <Suspense fallback={<LeaderboardSkeleton />}>
+            <LeaderboardDisplay initialData={roasts} />
+          </Suspense>
 
           <div className="flex justify-center pt-4">
             <p className="font-sans text-xs text-text-tertiary">
-              showing top 3 ·{" "}
+              showing worst 3 ·{" "}
               <Link
                 className="transition-colors hover:text-text-primary"
                 href="/leaderboard"

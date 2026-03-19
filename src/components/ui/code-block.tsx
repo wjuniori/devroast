@@ -39,6 +39,7 @@ export async function CodeBlockRoot({
   showLineNumbers = true,
   ...props
 }: CodeBlockRootProps) {
+  "use cache";
   const html = await highlightCode(code, lang);
   const normalizedHtml = html.replace(/background-color:[^;"']+;?/g, "");
   const lineNumbers = getLineNumbers(code);

@@ -1,60 +1,20 @@
+import { eq } from "drizzle-orm";
+import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import { createRoast } from "@/app/actions";
 import { Button, Card, CodeBlockRoot } from "@/components/ui";
 import { DiffLine } from "@/components/ui/diff-line";
+import db from "@/db/client";
+import {
+  roastAnalysisItems,
+  roastDiffBlocks,
+  roastDiffLines,
+  roastSubmissions,
+} from "@/db/schema";
 
 export const metadata = {
   title: "Roast Result | Devroast",
   description: "Your code has been thoroughly roasted",
-};
-
-const staticData = {
-  score: 3.5,
-  verdict: "needs_serious_help",
-  roastTitle:
-    "this code looks like it was written during a power outage... in 2005.",
-  language: "javascript" as const,
-  lines: 7,
-  code: `function calculateTotal(items) {
-  var total = 0;
-  for (var i = 0; i < items.length; i++) {
-    total = total + items[i].price;
-  }
-  return total;
-  
-  // TODO: handle tax calculation
-  // TODO: handle currency conversion
-  
-  calculateTax(total);
-}
-
-function calculateTax(amount) {
-  return amount * 1.1;
-}`,
-  issues: [
-    {
-      title: "using var instead of const/let",
-      description:
-        "var is function-scoped and leads to hoisting bugs. use const by default, let when reassignment is needed.",
-      type: "error" as const,
-    },
-    {
-      title: "imperative loop pattern",
-      description:
-        "for loops are verbose and error-prone. use .reduce() or .map() for cleaner, functional transformations.",
-      type: "error" as const,
-    },
-    {
-      title: "clear naming conventions",
-      description:
-        "calculateTotal and items are descriptive, self-documenting names that communicate intent without comments.",
-      type: "success" as const,
-    },
-    {
-      title: "single responsibility",
-      description:
-        "the function does one thing well — calculates a total. no side effects, no mixed concerns, no hidden complexity.",
-      type: "success" as const,
-    },
-  ],
 };
 
 function ScoreRing({ score }: { score: number }) {
@@ -109,25 +69,36 @@ function ScoreRing({ score }: { score: number }) {
   );
 }
 
-function IssueCard({ issue }: { issue: (typeof staticData.issues)[number] }) {
+function IssueCard({
+  issue,
+}: {
+  issue: { title: string; description: string; severity: string };
+}) {
+  const isCritical = issue.severity === "critical";
+  const isWarning = issue.severity === "warning";
+
   return (
     <Card className="p-5" padding="none">
       <div className="mb-3 flex items-center gap-2">
         <span
           className={
-            issue.type === "error"
+            isCritical
               ? "size-2 rounded-full bg-accent-red"
-              : "size-2 rounded-full bg-accent-green"
+              : isWarning
+                ? "size-2 rounded-full bg-accent-amber"
+                : "size-2 rounded-full bg-accent-green"
           }
         />
         <span
           className={
-            issue.type === "error"
+            isCritical
               ? "font-mono text-xs text-accent-red"
-              : "font-mono text-xs text-accent-green"
+              : isWarning
+                ? "font-mono text-xs text-accent-amber"
+                : "font-mono text-xs text-accent-green"
           }
         >
-          {issue.type === "error" ? "issue" : "positive"}
+          {issue.severity}
         </span>
       </div>
       <h4 className="mb-2 font-mono text-sm font-medium text-text-primary">
@@ -140,123 +111,197 @@ function IssueCard({ issue }: { issue: (typeof staticData.issues)[number] }) {
   );
 }
 
+function DiffBlockContent({ blockId }: { blockId: string }) {
+  return (
+    <div className="flex flex-col p-4">
+      <span className="font-mono text-xs text-text-tertiary">
+        {"// Diff lines will be displayed here"}
+      </span>
+    </div>
+  );
+}
+
+async function RoastContent({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const submission = await db.query.roastSubmissions.findFirst({
+    where: eq(roastSubmissions.id, id),
+  });
+
+  if (!submission) {
+    notFound();
+  }
+
+  if (submission.status === "failed") {
+    return (
+      <div className="flex flex-col items-center justify-center gap-6 py-20">
+        <div className="flex flex-col items-center gap-2 text-center">
+          <span className="font-mono text-2xl text-accent-red">$ error</span>
+          <p className="font-mono text-text-secondary">
+            {submission.errorMessage || "Failed to process your code"}
+          </p>
+        </div>
+        <form action={createRoast}>
+          <input type="hidden" name="code" value={submission.sourceCode} />
+          <input type="hidden" name="language" value={submission.language} />
+          <input type="hidden" name="mode" value={submission.mode} />
+          <Button type="submit" variant="outline">
+            $ try_again
+          </Button>
+        </form>
+      </div>
+    );
+  }
+
+  if (submission.status === "queued" || submission.status === "processing") {
+    return (
+      <div className="flex flex-col items-center justify-center gap-6 py-20">
+        <div className="flex flex-col items-center gap-2 text-center">
+          <span className="font-mono text-2xl text-accent-amber">
+            $ processing
+          </span>
+          <p className="font-mono text-text-secondary">
+            Analyzing your code...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const issues = await db.query.roastAnalysisItems.findMany({
+    where: eq(roastAnalysisItems.submissionId, id),
+    orderBy: (items, { asc }) => [asc(items.displayOrder)],
+  });
+
+  const diffBlocks = await db.query.roastDiffBlocks.findMany({
+    where: eq(roastDiffBlocks.submissionId, id),
+  });
+
+  const score = Number(submission.score) || 0;
+
+  return (
+    <>
+      <section className="flex items-center justify-center gap-12">
+        <ScoreRing score={score} />
+
+        <div className="flex max-w-xl flex-col gap-4">
+          <div className="flex items-center gap-2">
+            <span className="size-2 rounded-full bg-accent-red" />
+            <span className="font-mono text-sm font-medium text-accent-red">
+              verdict: {submission.verdict}
+            </span>
+          </div>
+
+          <h1 className="font-mono text-xl leading-relaxed text-text-primary">
+            "{submission.headline}"
+          </h1>
+
+          <div className="flex items-center gap-4 font-mono text-xs text-text-tertiary">
+            <span>lang: {submission.language}</span>
+            <span>·</span>
+            <span>{submission.sourceLineCount} lines</span>
+          </div>
+
+          {submission.summary && (
+            <p className="font-mono text-sm text-text-secondary">
+              {submission.summary}
+            </p>
+          )}
+        </div>
+      </section>
+
+      <div className="h-px w-full bg-border-primary" />
+
+      <section className="flex flex-col gap-4">
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-sm font-bold text-accent-green">
+            {"//"}
+          </span>
+          <h2 className="font-mono text-sm font-bold text-text-primary">
+            your_submission
+          </h2>
+        </div>
+
+        <CodeBlockRoot
+          className="h-[424px]"
+          code={submission.sourceCode}
+          lang={submission.language as any}
+          showLineNumbers
+        />
+      </section>
+
+      {issues.length > 0 && (
+        <>
+          <div className="h-px w-full bg-border-primary" />
+
+          <section className="flex flex-col gap-6">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-sm font-bold text-accent-green">
+                {"//"}
+              </span>
+              <h2 className="font-mono text-sm font-bold text-text-primary">
+                detailed_analysis
+              </h2>
+            </div>
+
+            <div className="grid gap-5 md:grid-cols-2">
+              {issues.map((issue) => (
+                <IssueCard key={issue.id} issue={issue} />
+              ))}
+            </div>
+          </section>
+        </>
+      )}
+
+      {diffBlocks.length > 0 && (
+        <>
+          <div className="h-px w-full bg-border-primary" />
+
+          <section className="flex flex-col gap-6">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-sm font-bold text-accent-green">
+                {"//"}
+              </span>
+              <h2 className="font-mono text-sm font-bold text-text-primary">
+                suggested_fix
+              </h2>
+            </div>
+
+            {diffBlocks.map((block) => (
+              <Card
+                key={block.id}
+                className="overflow-hidden p-0"
+                padding="none"
+              >
+                <div className="flex h-10 items-center border-b border-border-primary px-4 font-mono text-xs text-text-secondary">
+                  {block.fromLabel} → {block.toLabel}
+                </div>
+                <DiffBlockContent blockId={block.id} />
+              </Card>
+            ))}
+          </section>
+        </>
+      )}
+    </>
+  );
+}
+
 export default async function RoastResultPage({
-  params: _params,
+  params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  void _params;
-
   return (
     <main className="flex-1 bg-bg-page">
       <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-10 px-20 py-10">
-        <section className="flex items-center justify-center gap-12">
-          <ScoreRing score={staticData.score} />
-
-          <div className="flex max-w-xl flex-col gap-4">
-            <div className="flex items-center gap-2">
-              <span className="size-2 rounded-full bg-accent-red" />
-              <span className="font-mono text-sm font-medium text-accent-red">
-                verdict: {staticData.verdict}
-              </span>
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center py-20">
+              <span className="font-mono text-text-tertiary">Loading...</span>
             </div>
-
-            <h1 className="font-mono text-xl leading-relaxed text-text-primary">
-              "{staticData.roastTitle}"
-            </h1>
-
-            <div className="flex items-center gap-4 font-mono text-xs text-text-tertiary">
-              <span>lang: {staticData.language}</span>
-              <span>·</span>
-              <span>{staticData.lines} lines</span>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <Button variant="outline" size="sm" className="h-9 px-4">
-                $ share_roast
-              </Button>
-            </div>
-          </div>
-        </section>
-
-        <div className="h-px w-full bg-border-primary" />
-
-        <section className="flex flex-col gap-4">
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-sm font-bold text-accent-green">
-              {"//"}
-            </span>
-            <h2 className="font-mono text-sm font-bold text-text-primary">
-              your_submission
-            </h2>
-          </div>
-
-          <CodeBlockRoot
-            className="h-[424px]"
-            code={staticData.code}
-            lang={staticData.language}
-            showLineNumbers
-          />
-        </section>
-
-        <div className="h-px w-full bg-border-primary" />
-
-        <section className="flex flex-col gap-6">
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-sm font-bold text-accent-green">
-              {"//"}
-            </span>
-            <h2 className="font-mono text-sm font-bold text-text-primary">
-              detailed_analysis
-            </h2>
-          </div>
-
-          <div className="grid gap-5 md:grid-cols-2">
-            {staticData.issues.map((issue) => (
-              <IssueCard key={issue.title} issue={issue} />
-            ))}
-          </div>
-        </section>
-
-        <div className="h-px w-full bg-border-primary" />
-
-        <section className="flex flex-col gap-6">
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-sm font-bold text-accent-green">
-              {"//"}
-            </span>
-            <h2 className="font-mono text-sm font-bold text-text-primary">
-              suggested_fix
-            </h2>
-          </div>
-
-          <Card className="overflow-hidden p-0" padding="none">
-            <div className="flex h-10 items-center border-b border-border-primary px-4 font-mono text-xs text-text-secondary">
-              your_code.ts → improved_code.ts
-            </div>
-            <div className="flex flex-col">
-              <DiffLine variant="context">
-                function calculateTotal(items) {"{"}
-              </DiffLine>
-              <DiffLine variant="removed"> var total = 0;</DiffLine>
-              <DiffLine variant="removed">
-                {" "}
-                for (var i = 0; i &lt; items.length; i++) {"{"}
-              </DiffLine>
-              <DiffLine variant="removed">
-                {" "}
-                total = total + items[i].price;
-              </DiffLine>
-              <DiffLine variant="removed"> {"}"}</DiffLine>
-              <DiffLine variant="removed"> return total;</DiffLine>
-              <DiffLine variant="added">
-                {"  "}return items.reduce((sum, item) =&gt; sum + item.price,
-                0);
-              </DiffLine>
-              <DiffLine variant="context">{"}"}</DiffLine>
-            </div>
-          </Card>
-        </section>
+          }
+        >
+          <RoastContent params={params} />
+        </Suspense>
       </div>
     </main>
   );
