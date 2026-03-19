@@ -12,10 +12,31 @@ import {
   roastSubmissions,
 } from "@/db/schema";
 
-export const metadata = {
-  title: "Roast Result | Devroast",
-  description: "Your code has been thoroughly roasted",
-};
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+
+  const roast = await db.query.roastSubmissions.findFirst({
+    where: eq(roastSubmissions.id, id),
+  });
+
+  if (!roast || roast.status !== 'completed') {
+    return { title: 'Roast Result | Devroast' };
+  }
+
+  const score = Number(roast.score) || 0;
+
+  return {
+    title: `Roast Result: ${score.toFixed(1)}/10 - ${roast.verdict || 'analyzed'} | Devroast`,
+    description: roast.headline || 'Your code has been roasted',
+    openGraph: {
+      images: [`/roast/${id}/opengraph-image`],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      images: [`/roast/${id}/opengraph-image`],
+    },
+  };
+}
 
 function ScoreRing({ score }: { score: number }) {
   const circumference = 2 * Math.PI * 88;
